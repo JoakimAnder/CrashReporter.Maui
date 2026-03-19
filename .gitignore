@@ -1,0 +1,60 @@
+# Build results
+**/bin/
+**/obj/
+**/out/
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+project.lock.json
+project.assets.json
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# Rider
+.idea/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# MAUI / Mobile platform artifacts
+**/*.app/
+**/*.ipa
+**/*.apk
+**/*.aab
+**/*.dSYM.zip
+**/*.dSYM
+
+# Android
+**/google-services.json
+**/GoogleService-Info.plist
+
+# iOS provisioning
+**/*.mobileprovision
+**/*.p12
+**/*.p8
+
+# Test results
+TestResults/
+coverage/
+*.trx
+*.coveragexml
+
+# Logs
+*.log
+logs/
