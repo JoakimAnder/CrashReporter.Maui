@@ -1,2 +1,2 @@
-global using XUnit;
+global using Xunit;
 global using CrashReporter.Abstractions;
