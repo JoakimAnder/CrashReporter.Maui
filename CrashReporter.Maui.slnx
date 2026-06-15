@@ -1,8 +1,8 @@
 <Solution>
-  <Folder Name="/Source/">
-    <Project Path="Source/CrashReporter.Maui/CrashReporter.Maui.csproj" />
+  <Folder Name="/src/">
+    <Project Path="src/CrashReporter.Maui/CrashReporter.Maui.csproj" />
   </Folder>
-  <Folder Name="/Tests/">
-    <Project Path="Tests/CrashReporter.Maui.UnitTests/CrashReporter.Maui.UnitTests.csproj" />
+  <Folder Name="/tests/">
+    <Project Path="tests/CrashReporter.Maui.UnitTests/CrashReporter.Maui.UnitTests.csproj" />
   </Folder>
 </Solution>

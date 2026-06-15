@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: macos-latest
+    environment: nuget-release
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: 'Directory.Packages.props'
+
+      - run: dotnet workload restore
+      - run: dotnet restore
+      - run: dotnet build -c Release --no-restore
+      - run: dotnet test -c Release --no-build
+
+      - run: dotnet pack -c Release --no-build -o ./artifacts src/CrashReporter.Maui/CrashReporter.Maui.csproj
+
+      - uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: JoakimAnder
+
+      - run: >
+          dotnet nuget push ./artifacts/*.nupkg
+          --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}"
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate
