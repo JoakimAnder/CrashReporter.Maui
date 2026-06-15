@@ -27,7 +27,7 @@ jobs:
           cache: true
           cache-dependency-path: 'Directory.Packages.props'
 
-      - run: dotnet workload restore
+      - run: dotnet workload install maui-android maui-ios
       - run: dotnet restore
       - run: dotnet build -c Release --no-restore
       - run: dotnet test -c Release --no-build
