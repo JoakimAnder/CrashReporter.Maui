@@ -4,7 +4,7 @@ namespace CrashReporter.Maui.Crashes.Android;
 internal class UnhandledExceptionReporter(
     ISnapshotCollector _snapshots,
     ILogger<UnhandledExceptionReporter> _logger
-    ) : ICrashReporter
+    ) : ICrashReportProvider
 {
     private static readonly string CrashFilePath = Path.Combine(FileSystem.AppDataDirectory, "Crashes", "android_env_crash.txt");
 
@@ -22,13 +22,13 @@ internal class UnhandledExceptionReporter(
         if (cancellationToken.IsCancellationRequested)
             return ValueTask.FromCanceled(cancellationToken);
 
-        AndroidEnvironment.UnhandledExceptionRaiser -= AndroidEnvironment_UnhandledExceptionRaiser;
-        AndroidEnvironment.UnhandledExceptionRaiser += AndroidEnvironment_UnhandledExceptionRaiser;
+        global::Android.Runtime.AndroidEnvironment.UnhandledExceptionRaiser -= AndroidEnvironment_UnhandledExceptionRaiser;
+        global::Android.Runtime.AndroidEnvironment.UnhandledExceptionRaiser += AndroidEnvironment_UnhandledExceptionRaiser;
 
         return ValueTask.CompletedTask;
     }
 
-    private void AndroidEnvironment_UnhandledExceptionRaiser(object? sender, RaiseThrowableEventArgs e)
+    private void AndroidEnvironment_UnhandledExceptionRaiser(object? sender, global::Android.Runtime.RaiseThrowableEventArgs e)
     {
         if (e.Handled)
             return;

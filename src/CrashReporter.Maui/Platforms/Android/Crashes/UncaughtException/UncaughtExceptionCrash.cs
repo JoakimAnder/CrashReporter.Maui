@@ -1,4 +1,3 @@
-
 namespace CrashReporter.Maui.Crashes.Android;
 
 internal sealed record UncaughtExceptionCrash(
@@ -11,10 +10,10 @@ internal sealed record UncaughtExceptionCrash(
 {
     public string Type => nameof(UncaughtExceptionCrash);
 
-    public static UncaughtExceptionCrash FromThrowable(Throwable throwable, IReadOnlyCollection<Snapshot> snapshots)
+    public static UncaughtExceptionCrash FromThrowable(Java.Lang.Throwable throwable, IReadOnlyCollection<Snapshot> snapshots)
         => new(Guid.NewGuid(), throwable.ToString(), DateTime.UtcNow, MapExceptionInfo(throwable), snapshots);
 
-    private static ExceptionInfo MapExceptionInfo(Throwable throwable) => new(
+    private static ExceptionInfo MapExceptionInfo(Java.Lang.Throwable throwable) => new(
         Type: throwable.Class?.Name ?? "Unknown",
         Message: throwable.Message ?? string.Empty,
         StackTrace: throwable.GetStackTrace() is { } frames
