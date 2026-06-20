@@ -9,11 +9,11 @@ public partial class AppShell : Shell
 		InitializeComponent();
 	}
 
-	override void OnNavigated(ShellNavigatedEventArgs args)
+	protected override void OnNavigated(Microsoft.Maui.Controls.ShellNavigatedEventArgs args)
 	{
 		base.OnNavigated(args);
 
 		// I'm using the navigation event to trigger a snapshot update as <see cref="CustomSnapshotProvider"/> is a simple provider that just returns the current page, so we want to make sure to update it whenever we navigate to a new page.
-		CustomSnapshotProvider.RefreshPage(args.Source?.GetType().Name ?? "Unknown");
+		CustomSnapshotProvider.RefreshPage(args.Source.GetType().Name ?? "Unknown");
 	}
 }

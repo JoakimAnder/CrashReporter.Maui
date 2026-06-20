@@ -18,10 +18,6 @@ public static class MauiProgram
 			// See <see cref="AppBuilderExtensions"/> for more information.
 			.UseCrashHandling();
 
-#if DEBUG
-		builder.Logging.AddDebug();
-#endif
-
 		return builder.Build();
 	}
 }

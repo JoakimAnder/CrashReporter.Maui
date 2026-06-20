@@ -1,23 +1,25 @@
 namespace CrashReporter.Maui.ExampleApp.Services;
 
-internal sealed class CustomCrashReporter(ISnapshotManager snapshotManager) : ICrashReportProvider
+internal sealed class CustomCrashReporter : ICrashReportProvider
 {
     private static ICrash? _lastCrash;
-    public async Task<ICrash?> GetReport(CancellationToken cancellationToken)
+    public Task<ICrash?> GetReport(CancellationToken cancellationToken)
     {
         // In a real implementation, you would retrieve the crash report from disk or some other storage location as this is (usually) called on app startup after a crash, rather than while handling the crash.
-        return _lastCrash;
+        var crash = _lastCrash;
+        _lastCrash = null;
+        return Task.FromResult(crash);
     }
 
-    internal static async Task ReportCrash(string message)
+    internal static void ReportCrash(string message, ISnapshotCollector snapshotCollector)
     {
         _lastCrash = new CustomCrash(
             Id: Guid.NewGuid(),
             Type: nameof(CustomCrash),
             Raw: message,
-            TimeStampUTC: DateTimeOffset.UtcNow,
+            TimeStampUTC: DateTime.UtcNow,
             ExceptionInfo: null,
-            Snapshots: snapshotManager.GetSnapshots()
+            Snapshots: snapshotCollector.GetSnapshots()
         );
     }
 

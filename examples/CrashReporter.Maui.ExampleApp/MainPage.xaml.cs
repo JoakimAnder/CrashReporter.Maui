@@ -5,13 +5,15 @@ namespace CrashReporter.Maui.ExampleApp;
 
 public partial class MainPage : ContentPage
 {
-	private readonly IServiceProvider _services;
+	private readonly ICrashManager _crashManager;
+	private readonly ISnapshotCollector _snapshotCollector;
 
-	private int _count = 0;
+	private int _count;
 
-	public MainPage(IServiceProvider services)
+	public MainPage(ICrashManager crashManager, ISnapshotCollector snapshotCollector)
 	{
-		_services = services;
+		_crashManager = crashManager;
+		_snapshotCollector = snapshotCollector;
 		InitializeComponent();
 	}
 
@@ -30,7 +32,7 @@ public partial class MainPage : ContentPage
 	private void OnCustomCrashClicked(object? sender, EventArgs e)
 	{
 		string message = $"This is a custom crash. Count: {_count}";
-		CustomCrashReporter.ReportCrash(message);
+		CustomCrashReporter.ReportCrash(message, _snapshotCollector);
 	}
 
 	private void OnNativeCrashClicked(object? sender, EventArgs e)
@@ -38,14 +40,21 @@ public partial class MainPage : ContentPage
 		CrashHelper.NativeCrash();
 	}
 
-	private void OnCheckForCrashesClicked(object? sender, EventArgs e)
+	private async void OnCheckForCrashesClicked(object? sender, EventArgs e)
 	{
-		var crash = _services.CheckForCrash();
+		var crash = await _crashManager.GetReport(CancellationToken.None);
 		if (crash is null)
 		{
-			DisplayAlert("No crash", "No crash found", "OK");
+			await DisplayAlertAsync("No crash", "No crash found", "OK");
 			return;
 		}
+
+		var selected = await DisplayActionSheetAsync("Crash found", "Cancel", destruction: null, "Send to handlers");
+		if (!string.Equals(selected, "Send to handlers"))
+			return;
+
+		await _crashManager.HandleCrash(crash, CancellationToken.None);
+		await DisplayAlertAsync("Crash handeled", crash.Type, "OK");
 
 	}
 }
