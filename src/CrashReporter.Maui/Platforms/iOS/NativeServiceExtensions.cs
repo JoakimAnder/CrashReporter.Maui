@@ -9,4 +9,8 @@ internal static class NativeServiceExtensions
     {
         return services;
     }
+    internal static ValueTask InitializeNativeServices(this IServiceProvider services, IReadOnlyConfig config, CancellationToken cancellationToken)
+    {
+        return ValueTask.CompletedTask;
+    }
 }

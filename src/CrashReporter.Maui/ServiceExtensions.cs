@@ -1,12 +1,10 @@
-using System.Runtime.CompilerServices;
-using CrashReporter.Maui.Crashes;
-using CrashReporter.Maui.Configurations;
+using CrashReporter.Maui.Crashes.Shared;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace CrashReporter.Maui;
 
 public static class ServiceExtensions
 {
-    private static readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
 
     public static MauiAppBuilder AddCrashHandling(this MauiAppBuilder builder, Action<Configuration>? setup = null)
     {
@@ -24,23 +22,30 @@ public static class ServiceExtensions
         return services;
     }
 
-    private static IServiceCollection AddServices(this IServiceCollection services, IReadOnlyConfig config)
+    private static IServiceCollection AddServices(this IServiceCollection services, InternalConfig config)
     {
-        services.AddSingleton(config);
+        services.AddSingleton<IReadOnlyConfig>(config);
 
-        services.AddSingleton<ISnapshotCollector, SnapshotCollector>();
-        services.AddSingleton<ISnapshotProvider, DeviceInfoSnapshotProvider>();
-        services.AddSingleton<ISnapshotProvider, AppInfoSnapshotProvider>();
+        services.TryAddSingleton<ISnapshotCollector, SnapshotCollector>();
+        services.TryAddSingleton<ICrashManager, CrashManager>();
 
-        if (config.IsTerminatingUnhandledExceptionReporterEnabled)
-            services.AddSingleton<ICrashReporter, Crashes.Shared.TerminatingUnhandledExceptionReporter>();
+        if (config.IsDeviceInfoSnapshotEnabled)
+            services.AddSingleton<ISnapshotProvider, DeviceInfoSnapshotProvider>();
+        if (config.IsAppInfoSnapshotEnabled)
+            services.AddSingleton<ISnapshotProvider, AppInfoSnapshotProvider>();
+        
+        if (config.IsMauiTerminatingUnhandeledExceptionReporterEnabled)
+        {
+            services.AddSingleton<TerminatingUnhandledExceptionReporter>();
+            services.AddSingleton<ICrashReportProvider>(sp => sp.GetRequiredService<TerminatingUnhandledExceptionReporter>());
+        }
 
         services.AddNativeServices(config);
         return services;
     }
 
     /// <summary>
-    /// Initializes the crash handling system by enabling all registered crash holders and checking for any stored crashes using the registered crash checker.
+    /// Initializes the crash handling system by enabling all registered crash report providers and checking for any stored crashes using the registered crash checker.
     /// Should most likely be called after the app has started <see cref="Application.OnStart"/>. This gives your handlers the chance to use the UI to provide the user with information about the crash or options for how to proceed, for example. However, if you want to check for crashes earlier by calling this method earlier in the app's lifecycle. Just keep in mind that if you call it too early, some of your handlers may not be fully initialized yet and may not be able to handle the crash properly.
     /// </summary>
     /// <param name="services"></param>
@@ -49,91 +54,23 @@ public static class ServiceExtensions
         var config = services.GetRequiredService<IReadOnlyConfig>();
 
         if (config.IsCheckOnInitializationEnabled)
-            await services.CheckForCrash(cancellationToken);
-
-        // Warm the snapshot cache before reporters wire up their crash handlers,
-        // so a crash firing immediately after init still has snapshots to attach.
-        await services.GetRequiredService<ISnapshotCollector>().RefreshAsync(cancellationToken);
-
-        await services.InitializeReporters(cancellationToken);
-    }
-
-    public static async Task<ICrash?> CheckForCrash(this IServiceProvider services, CancellationToken cancellationToken)
-    {
-        if (!await _semaphoreSlim.WaitAsync(millisecondsTimeout:0, cancellationToken))
-            return null;
-        
-        var reporters = services.GetReporters();
-        var crashes = await services.GetCrashes(reporters, cancellationToken).ToArrayAsync(cancellationToken);
-        
-        if (crashes.Length == 0)
-            return null;
-
-        if (crashes.Length == 1)
-            return crashes[0];
-
-        return new AggregateCrash(crashes);
-    }
-
-    private static IEnumerable<ICrashReporter> GetReporters(this IServiceProvider services)
-    {
-        try
         {
-            return services.GetServices<ICrashReporter>();
+            var crashManager = services.GetRequiredService<ICrashManager>();
+            var crash = await crashManager.GetReport(cancellationToken);
+            if (crash != null)
+                await crashManager.HandleCrash(crash, cancellationToken);
         }
-        catch(Exception ex)
-        {
-            var logger = services.GetRequiredService<ILogger<CrashReporter>>();
-            logger.LogError(ex, "Failed to get crash reporters");
-            return [];
-        }
+
+        // Initialize the SnapshotCollector and therefore all the snapshot providers.
+        _ = services.GetRequiredService<ISnapshotCollector>();
+
+        if (config.IsMauiTerminatingUnhandeledExceptionReporterEnabled)
+            await services.GetRequiredService<TerminatingUnhandledExceptionReporter>().Initialize(cancellationToken);
+
+        await services.InitializeNativeServices(config, cancellationToken);
     }
 
-    private static async IAsyncEnumerable<ICrash> GetCrashes(this IServiceProvider services, IEnumerable<ICrashReporter> reporters, [EnumeratorCancellation]CancellationToken cancellationToken)
-    {
-        foreach (var reporter in reporters)
-        {
-            ICrash? report = null;
-            try
-            {
-                report = await reporter.GetReport(cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                var logger = services.GetRequiredService<ILogger<CrashReporter>>();
-                logger.LogError(ex, "Failed to get report from {CrashReporter}", reporter.GetType().Name);
-            }
 
-            if (report is null)
-                continue;
 
-            yield return report;
-        }
-    }
-
-    private static async Task InitializeReporters(this IServiceProvider services, CancellationToken cancellationToken)
-    {
-        var reporters = services.GetReporters();
-        await services.Initialize(reporters, cancellationToken).ToArrayAsync(cancellationToken);
-    }
-
-    private static async IAsyncEnumerable<bool> Initialize(this IServiceProvider services, IEnumerable<ICrashReporter> reporters, [EnumeratorCancellation]CancellationToken cancellationToken)
-    {
-        foreach (var reporter in reporters)
-        {
-            bool isSuccess = false;
-            try
-            {
-                await reporter.Initialize(cancellationToken);
-                isSuccess = true;
-            }
-            catch (Exception ex)
-            {
-                var logger = services.GetRequiredService<ILogger<CrashReporter>>();
-                logger.LogError(ex, "Failed to initialize reporter");
-            }
-            yield return isSuccess;
-        }
-    }
 
 }

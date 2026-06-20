@@ -17,15 +17,15 @@ internal class UnhandledExceptionReporter(
         return Task.FromResult(crash);
     }
 
-    public Task Initialize(CancellationToken cancellationToken)
+    internal ValueTask Initialize(CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
-            return Task.FromCanceled(cancellationToken);
+            return ValueTask.FromCanceled(cancellationToken);
 
         AndroidEnvironment.UnhandledExceptionRaiser -= AndroidEnvironment_UnhandledExceptionRaiser;
         AndroidEnvironment.UnhandledExceptionRaiser += AndroidEnvironment_UnhandledExceptionRaiser;
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
     private void AndroidEnvironment_UnhandledExceptionRaiser(object? sender, RaiseThrowableEventArgs e)

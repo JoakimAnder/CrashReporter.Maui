@@ -1,10 +1,9 @@
-using CrashReporter.Abstractions;
 
 namespace CrashReporter.Maui.Crashes;
 
 internal sealed class AppInfoSnapshotProvider : ISnapshotProvider
 {
-    public ValueTask<Snapshot> TakeSnapshot(CancellationToken cancellationToken)
+    public Snapshot TakeSnapshot()
     {
         var info = AppInfoSnapshot.FromCurrent();
 
@@ -16,6 +15,6 @@ internal sealed class AppInfoSnapshotProvider : ISnapshotProvider
             [nameof(info.Build)] = info.Build,
         };
 
-        return new ValueTask<Snapshot>(new Snapshot("app", data));
+        return new Snapshot("app", data);
     }
 }
