@@ -4,16 +4,18 @@ namespace CrashReporter.Maui.Configurations;
 internal interface IReadOnlyConfig
 {
     bool IsCheckOnInitializationEnabled { get; }
-    bool IsTerminatingUnhandledExceptionReporterEnabled { get; }
-    bool IsPLCrashReporterEnabled { get; }
-    bool IsAndroidEnvironmentUnhandledExceptionReporterEnabled { get; }
-    bool IsAndroidThreadUncaughtExceptionReporterEnabled { get; }
+    bool IsAndroidUnhandeledExceptionReporterEnabled { get; }
+    bool IsAndroidUncaughtExceptionReporterEnabled { get; }
+    bool IsMauiTerminatingUnhandeledExceptionReporterEnabled { get; }
+    bool IsDeviceInfoSnapshotEnabled { get; }
+    bool IsAppInfoSnapshotEnabled { get; }
 }
 internal sealed class InternalConfig : IReadOnlyConfig
 {
-    public bool IsCheckOnInitializationEnabled { get; set; } = true;
-    public bool IsTerminatingUnhandledExceptionReporterEnabled { get; set; } = true;
-    public bool IsPLCrashReporterEnabled { get; set; } = true;
-    public bool IsAndroidEnvironmentUnhandledExceptionReporterEnabled { get; set; } = true;
-    public bool IsAndroidThreadUncaughtExceptionReporterEnabled { get; set; } = true;
+    public bool IsCheckOnInitializationEnabled { get; internal set; } = true;
+    public bool IsAndroidUnhandeledExceptionReporterEnabled { get; internal set; } = true;
+    public bool IsAndroidUncaughtExceptionReporterEnabled { get; internal set; } = true;
+    public bool IsMauiTerminatingUnhandeledExceptionReporterEnabled { get; internal set; } = true;
+    public bool IsDeviceInfoSnapshotEnabled { get; internal set; } = true;
+    public bool IsAppInfoSnapshotEnabled { get; internal set; } = true;
 }

@@ -18,10 +18,10 @@ internal class UncaughtExceptionReporter(
         return Task.FromResult(crash);
     }
 
-    public Task Initialize(CancellationToken cancellationToken)
+    internal ValueTask Initialize(CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
-            return Task.FromCanceled(cancellationToken);
+            return ValueTask.FromCanceled(cancellationToken);
 
         if (Java.Lang.Thread.DefaultUncaughtExceptionHandler == this)
             return;
@@ -29,7 +29,7 @@ internal class UncaughtExceptionReporter(
         defaultHandler = Java.Lang.Thread.DefaultUncaughtExceptionHandler;
         Java.Lang.Thread.DefaultUncaughtExceptionHandler = this;
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
     
     public void UncaughtException(Java.Lang.Thread t, Throwable e)

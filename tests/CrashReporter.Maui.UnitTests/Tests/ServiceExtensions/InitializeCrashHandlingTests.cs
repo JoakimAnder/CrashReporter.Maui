@@ -1,7 +1,4 @@
 
-using CrashReporter.Maui.Crashes;
-using Microsoft.Extensions.DependencyInjection;
-
 namespace CrashReporter.Maui.UnitTests.Tests.ServiceExtensions;
 
 public class InitializeCrashHandlingTests
@@ -9,65 +6,81 @@ public class InitializeCrashHandlingTests
     private MockCrashReporter _mockReporter = new();
     private MockCrashHandler _mockHandler = new();
     private IServiceCollection _services = new ServiceCollection();
-    private IServiceProvider GetSut() => _services
+    private ServiceProvider GetSut() => _services
+        .AddLogging()
         .BuildServiceProvider();
 
-    public async Task InitializeCrashHandling_InitializesAndChecksReporters()
+    [Fact]
+    public async Task InitializesAndChecksReporters()
     {
-        _services.AddCrashHandling(config => config.ConfigureReporters(c => c.DisableAll()))
-            .AddSingleton<ICrashReporter>(_mockReporter);
+        _services.AddCrashHandling(config => {})
+            .AddSingleton<ICrashReportProvider>(_mockReporter);
         var sut = GetSut();
 
         await sut.InitializeCrashHandling();
 
-        Assert.Equal(1, _mockReporter.InitCount);
         Assert.Equal(1, _mockReporter.GetReportCount);
     }
 
-    public async Task InitializeCrashHandling_WithDisabledCheckOnInit_InitializesButDoesNotCheckReporters()
+    [Fact]
+    public async Task WithDisabledCheckOnInit_InitializesButDoesNotCheckReporters()
     {
         _services.AddCrashHandling(config => config
-                .ConfigureReporters(c => c.DisableAll())
                 .DisableCrashCheckOnInitialization())
-            .AddSingleton<ICrashReporter>(_mockReporter);
+            .AddSingleton<ICrashReportProvider>(_mockReporter);
         var sut = GetSut();
 
         await sut.InitializeCrashHandling();
 
-        Assert.Equal(1, _mockReporter.InitCount);
         Assert.Equal(0, _mockReporter.GetReportCount);
     }
 
-    public async Task InitializeCrashHandling_InitializesAndChecksReporters_AndHandlesCrashes()
+    [Fact]
+    public async Task InitializesAndChecksReporters_AndHandlesCrashes()
     {
         _mockReporter.Crash = new MockCrash();
-        _services.AddCrashHandling(config => config
-                .ConfigureReporters(c => c.DisableAll()))
-            .AddSingleton<ICrashReporter>(_mockReporter)
+        _services.AddCrashHandling(config => {})
+            .AddSingleton<ICrashReportProvider>(_mockReporter)
             .AddSingleton<ICrashHandler>(_mockHandler);
         var sut = GetSut();
 
         await sut.InitializeCrashHandling();
 
-        Assert.Equal(1, _mockReporter.InitCount);
         Assert.Equal(1, _mockReporter.GetReportCount);
         Assert.Equal(1, _mockHandler.HandleCount);
     }
 
-    public async Task InitializeCrashHandling_WithManyCrashes_HandlesCrashesOnce()
+    [Fact]
+    public async Task WithManyCrashes_HandlesCrashesOnce()
     {
         _mockReporter.Crash = new MockCrash();
-        _services.AddCrashHandling(config => config
-                .ConfigureReporters(c => c.DisableAll()))
-            .AddSingleton<ICrashReporter>(_mockReporter)
-            .AddSingleton<ICrashReporter>(_mockReporter)
+        _services.AddCrashHandling(config => {})
+            .AddSingleton<ICrashReportProvider>(_mockReporter)
+            .AddSingleton<ICrashReportProvider>(_mockReporter)
             .AddSingleton<ICrashHandler>(_mockHandler);
         var sut = GetSut();
 
         await sut.InitializeCrashHandling();
 
-        Assert.Equal(2, _mockReporter.InitCount);
         Assert.Equal(2, _mockReporter.GetReportCount);
         Assert.Equal(1, _mockHandler.HandleCount);
     }
+
+    [Fact]
+    public async Task WithManyHandlers_HandlesCrashesWithAllHandlers()
+    {
+        _mockReporter.Crash = new MockCrash();
+        _services.AddCrashHandling(config => {})
+            .AddSingleton<ICrashReportProvider>(_mockReporter)
+            .AddSingleton<ICrashHandler>(_mockHandler)
+            .AddSingleton<ICrashHandler>(_mockHandler);
+        var sut = GetSut();
+
+        await sut.InitializeCrashHandling();
+
+        Assert.Equal(1, _mockReporter.GetReportCount);
+        Assert.Equal(2, _mockHandler.HandleCount);
+    }
+
+
 }

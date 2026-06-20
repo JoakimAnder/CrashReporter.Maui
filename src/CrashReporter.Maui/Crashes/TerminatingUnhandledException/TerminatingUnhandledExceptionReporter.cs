@@ -5,7 +5,7 @@ namespace CrashReporter.Maui.Crashes.Shared;
 internal sealed class TerminatingUnhandledExceptionReporter(
     ISnapshotCollector snapshots,
     ILogger<TerminatingUnhandledExceptionReporter> logger
-    ) : ICrashReporter
+    ) : ICrashReportProvider
 {
     private static readonly string CrashFilePath = Path.Combine(FileSystem.AppDataDirectory, "Crashes", "maui_crash.txt");
 
@@ -18,16 +18,15 @@ internal sealed class TerminatingUnhandledExceptionReporter(
         return crash;
     }
 
-    public Task Initialize(CancellationToken cancellationToken)
+    internal ValueTask Initialize(CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
-            return Task.FromCanceled(cancellationToken);
-
+            return ValueTask.FromCanceled(cancellationToken);
         
         AppDomain.CurrentDomain.UnhandledException -= CurrentDomainOnUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
     private void CurrentDomainOnUnhandledException(object? sender, UnhandledExceptionEventArgs e)
@@ -36,7 +35,7 @@ internal sealed class TerminatingUnhandledExceptionReporter(
             return;
 
         var ex = e.ExceptionObject as Exception ?? new Exception($"Unknown error crashed the app. ExceptionObject: {e.ExceptionObject}");
-        var crash = TerminatingUnhandledExceptionCrash.FromException(ex, snapshots.Current);
+        var crash = TerminatingUnhandledExceptionCrash.FromException(ex, snapshots.GetSnapshots());
         CrashFileReader.WriteCrash(CrashFilePath, crash, logger);
     }
 }

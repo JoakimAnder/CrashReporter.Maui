@@ -4,7 +4,7 @@ namespace CrashReporter.Maui.Crashes;
 
 internal sealed class DeviceInfoSnapshotProvider : ISnapshotProvider
 {
-    public ValueTask<Snapshot> TakeSnapshot(CancellationToken cancellationToken)
+    public Snapshot TakeSnapshot()
     {
         var info = DeviceInfoSnapshot.FromCurrent();
 
@@ -17,6 +17,6 @@ internal sealed class DeviceInfoSnapshotProvider : ISnapshotProvider
             [nameof(info.Platform)] = info.Platform,
         };
 
-        return new ValueTask<Snapshot>(new Snapshot("device", data));
+        return new Snapshot("device", data);
     }
 }
