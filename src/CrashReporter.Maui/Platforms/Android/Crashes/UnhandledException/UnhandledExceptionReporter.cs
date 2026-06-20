@@ -4,7 +4,7 @@ namespace CrashReporter.Maui.Crashes.Android;
 internal class UnhandledExceptionReporter(
     ISnapshotCollector _snapshots,
     ILogger<UnhandledExceptionReporter> _logger
-    ) : ICrashReporter
+    ) : ICrashReportProvider
 {
     private static readonly string CrashFilePath = Path.Combine(FileSystem.AppDataDirectory, "Crashes", "android_env_crash.txt");
 
@@ -14,7 +14,7 @@ internal class UnhandledExceptionReporter(
             return Task.FromCanceled<ICrash?>(cancellationToken);
 
         var crash = CrashFileReader.ReadCrash<UnhandledExceptionCrash>(CrashFilePath, _logger);
-        return Task.FromResult(crash);
+        return crash;
     }
 
     internal ValueTask Initialize(CancellationToken cancellationToken)
@@ -22,18 +22,18 @@ internal class UnhandledExceptionReporter(
         if (cancellationToken.IsCancellationRequested)
             return ValueTask.FromCanceled(cancellationToken);
 
-        AndroidEnvironment.UnhandledExceptionRaiser -= AndroidEnvironment_UnhandledExceptionRaiser;
-        AndroidEnvironment.UnhandledExceptionRaiser += AndroidEnvironment_UnhandledExceptionRaiser;
+        global::Android.Runtime.AndroidEnvironment.UnhandledExceptionRaiser -= AndroidEnvironment_UnhandledExceptionRaiser;
+        global::Android.Runtime.AndroidEnvironment.UnhandledExceptionRaiser += AndroidEnvironment_UnhandledExceptionRaiser;
 
         return ValueTask.CompletedTask;
     }
 
-    private void AndroidEnvironment_UnhandledExceptionRaiser(object? sender, RaiseThrowableEventArgs e)
+    private void AndroidEnvironment_UnhandledExceptionRaiser(object? sender, global::Android.Runtime.RaiseThrowableEventArgs e)
     {
         if (e.Handled)
             return;
 
-        var crash = UnhandledExceptionCrash.FromException(e.Exception, _snapshots.Current);
+        var crash = UnhandledExceptionCrash.FromException(e.Exception, _snapshots.GetSnapshots());
         CrashFileReader.WriteCrash(CrashFilePath, crash, _logger);
     }
 }
