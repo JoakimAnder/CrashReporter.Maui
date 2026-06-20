@@ -22,7 +22,7 @@ internal sealed record UncaughtExceptionCrash(
         InnerException: throwable.Cause is { } cause
             ? MapExceptionInfo(cause)
             : null,
-        InnerExceptions: throwable.Suppressed is { Length: > 0 } suppressed
+        InnerExceptions: throwable.GetSuppressed() is { Length: > 0 } suppressed
             ? suppressed.Select(MapExceptionInfo).ToList()
             : null);
 }

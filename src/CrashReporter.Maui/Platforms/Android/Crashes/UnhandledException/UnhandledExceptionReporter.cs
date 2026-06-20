@@ -14,7 +14,7 @@ internal class UnhandledExceptionReporter(
             return Task.FromCanceled<ICrash?>(cancellationToken);
 
         var crash = CrashFileReader.ReadCrash<UnhandledExceptionCrash>(CrashFilePath, _logger);
-        return Task.FromResult(crash);
+        return crash;
     }
 
     internal ValueTask Initialize(CancellationToken cancellationToken)
@@ -33,7 +33,7 @@ internal class UnhandledExceptionReporter(
         if (e.Handled)
             return;
 
-        var crash = UnhandledExceptionCrash.FromException(e.Exception, _snapshots.Current);
+        var crash = UnhandledExceptionCrash.FromException(e.Exception, _snapshots.GetSnapshots());
         CrashFileReader.WriteCrash(CrashFilePath, crash, _logger);
     }
 }
