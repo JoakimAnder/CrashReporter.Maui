@@ -37,7 +37,7 @@ public static class ServiceExtensions
         if (config.IsMauiTerminatingUnhandeledExceptionReporterEnabled)
         {
             services.AddSingleton<TerminatingUnhandledExceptionReporter>();
-            services.AddSingleton<ICrashReportProvider>(sp => sp.GetRequiredService<TerminatingUnhandledExceptionReporter>());
+            services.AddSingleton<ICrashReportSource>(sp => sp.GetRequiredService<TerminatingUnhandledExceptionReporter>());
         }
 
         services.AddNativeServices(config);
@@ -56,7 +56,7 @@ public static class ServiceExtensions
         if (config.IsCheckOnInitializationEnabled)
         {
             var crashManager = services.GetRequiredService<ICrashManager>();
-            var crash = await crashManager.GetReport(cancellationToken);
+            var crash = await crashManager.Consume(cancellationToken);
             if (crash != null)
                 await crashManager.HandleCrash(crash, cancellationToken);
         }

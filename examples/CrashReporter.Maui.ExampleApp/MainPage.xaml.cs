@@ -42,7 +42,7 @@ public partial class MainPage : ContentPage
 
 	private async void OnCheckForCrashesClicked(object? sender, EventArgs e)
 	{
-		var crash = await _crashManager.GetReport(CancellationToken.None);
+		var crash = await _crashManager.Consume(CancellationToken.None);
 		if (crash is null)
 		{
 			await DisplayAlertAsync("No crash", "No crash found", "OK");

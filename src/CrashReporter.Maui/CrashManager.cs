@@ -4,11 +4,16 @@ namespace CrashReporter.Maui;
 public interface ICrashManager
 {
     /// <summary>
-    /// Get a crash report, if any exist.
+    /// Consumes the pending crash report by draining every registered <see cref="ICrashReportSource"/>.
     /// </summary>
+    /// <remarks>
+    /// This is a one-shot, destructive read: each source's report is consumed, so a subsequent call
+    /// returns <see langword="null"/> until a new crash occurs. Concurrent calls are coalesced; only
+    /// the first proceeds and the rest return <see langword="null"/>.
+    /// </remarks>
     /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    ValueTask<ICrash?> GetReport(CancellationToken cancellationToken);
+    /// <returns>The pending crash report (aggregated across sources), or <see langword="null"/> if none is available.</returns>
+    ValueTask<ICrash?> Consume(CancellationToken cancellationToken);
 
     /// <summary>
     /// Sends the crash report to the crash handlers.
@@ -26,7 +31,7 @@ internal sealed class CrashManager(
 {
     private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
 
-    public async ValueTask<ICrash?> GetReport(CancellationToken cancellationToken)
+    public async ValueTask<ICrash?> Consume(CancellationToken cancellationToken)
     {
         if (!await _semaphoreSlim.WaitAsync(millisecondsTimeout: 0, cancellationToken))
             return null;
@@ -56,7 +61,7 @@ internal sealed class CrashManager(
             ICrash? report = null;
             try
             {
-                report = await reporter.GetReport(cancellationToken);
+                report = await reporter.Consume(cancellationToken);
             }
             catch (Exception ex)
             {
@@ -101,11 +106,11 @@ internal sealed class CrashManager(
             return [];
         }
     }
-    private IEnumerable<ICrashReportProvider> GetReporters()
+    private IEnumerable<ICrashReportSource> GetReporters()
     {
         try
         {
-            return serviceProvider.GetServices<ICrashReportProvider>();
+            return serviceProvider.GetServices<ICrashReportSource>();
         }
         catch(Exception ex)
         {

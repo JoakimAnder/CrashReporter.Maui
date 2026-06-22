@@ -14,12 +14,12 @@ public class InitializeCrashHandlingTests
     public async Task InitializesAndChecksReporters()
     {
         _services.AddCrashHandling(config => {})
-            .AddSingleton<ICrashReportProvider>(_mockReporter);
+            .AddSingleton<ICrashReportSource>(_mockReporter);
         var sut = GetSut();
 
         await sut.InitializeCrashHandling();
 
-        Assert.Equal(1, _mockReporter.GetReportCount);
+        Assert.Equal(1, _mockReporter.ConsumeCount);
     }
 
     [Fact]
@@ -27,12 +27,12 @@ public class InitializeCrashHandlingTests
     {
         _services.AddCrashHandling(config => config
                 .DisableCrashCheckOnInitialization())
-            .AddSingleton<ICrashReportProvider>(_mockReporter);
+            .AddSingleton<ICrashReportSource>(_mockReporter);
         var sut = GetSut();
 
         await sut.InitializeCrashHandling();
 
-        Assert.Equal(0, _mockReporter.GetReportCount);
+        Assert.Equal(0, _mockReporter.ConsumeCount);
     }
 
     [Fact]
@@ -40,13 +40,13 @@ public class InitializeCrashHandlingTests
     {
         _mockReporter.Crash = new MockCrash();
         _services.AddCrashHandling(config => {})
-            .AddSingleton<ICrashReportProvider>(_mockReporter)
+            .AddSingleton<ICrashReportSource>(_mockReporter)
             .AddSingleton<ICrashHandler>(_mockHandler);
         var sut = GetSut();
 
         await sut.InitializeCrashHandling();
 
-        Assert.Equal(1, _mockReporter.GetReportCount);
+        Assert.Equal(1, _mockReporter.ConsumeCount);
         Assert.Equal(1, _mockHandler.HandleCount);
     }
 
@@ -55,14 +55,14 @@ public class InitializeCrashHandlingTests
     {
         _mockReporter.Crash = new MockCrash();
         _services.AddCrashHandling(config => {})
-            .AddSingleton<ICrashReportProvider>(_mockReporter)
-            .AddSingleton<ICrashReportProvider>(_mockReporter)
+            .AddSingleton<ICrashReportSource>(_mockReporter)
+            .AddSingleton<ICrashReportSource>(_mockReporter)
             .AddSingleton<ICrashHandler>(_mockHandler);
         var sut = GetSut();
 
         await sut.InitializeCrashHandling();
 
-        Assert.Equal(2, _mockReporter.GetReportCount);
+        Assert.Equal(2, _mockReporter.ConsumeCount);
         Assert.Equal(1, _mockHandler.HandleCount);
     }
 
@@ -71,14 +71,14 @@ public class InitializeCrashHandlingTests
     {
         _mockReporter.Crash = new MockCrash();
         _services.AddCrashHandling(config => {})
-            .AddSingleton<ICrashReportProvider>(_mockReporter)
+            .AddSingleton<ICrashReportSource>(_mockReporter)
             .AddSingleton<ICrashHandler>(_mockHandler)
             .AddSingleton<ICrashHandler>(_mockHandler);
         var sut = GetSut();
 
         await sut.InitializeCrashHandling();
 
-        Assert.Equal(1, _mockReporter.GetReportCount);
+        Assert.Equal(1, _mockReporter.ConsumeCount);
         Assert.Equal(2, _mockHandler.HandleCount);
     }
 

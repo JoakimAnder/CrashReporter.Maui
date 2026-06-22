@@ -5,11 +5,11 @@ namespace CrashReporter.Maui.Crashes.Shared;
 internal sealed class TerminatingUnhandledExceptionReporter(
     ISnapshotCollector snapshots,
     ILogger<TerminatingUnhandledExceptionReporter> logger
-    ) : ICrashReportProvider
+    ) : ICrashReportSource
 {
     private static readonly string CrashFilePath = Path.Combine(FileSystem.AppDataDirectory, "Crashes", "maui_crash.txt");
 
-    public Task<ICrash?> GetReport(CancellationToken cancellationToken)
+    public Task<ICrash?> Consume(CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
             return Task.FromCanceled<ICrash?>(cancellationToken);

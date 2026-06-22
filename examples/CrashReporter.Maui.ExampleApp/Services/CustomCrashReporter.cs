@@ -1,9 +1,9 @@
 namespace CrashReporter.Maui.ExampleApp.Services;
 
-internal sealed class CustomCrashReporter : ICrashReportProvider
+internal sealed class CustomCrashReporter : ICrashReportSource
 {
     private static ICrash? _lastCrash;
-    public Task<ICrash?> GetReport(CancellationToken cancellationToken)
+    public Task<ICrash?> Consume(CancellationToken cancellationToken)
     {
         // In a real implementation, you would retrieve the crash report from disk or some other storage location as this is (usually) called on app startup after a crash, rather than while handling the crash.
         var crash = _lastCrash;

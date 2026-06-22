@@ -10,12 +10,12 @@ internal static class NativeServiceExtensions
         if (config.IsAndroidUnhandeledExceptionReporterEnabled)
         {
             services.AddSingleton<UnhandledExceptionReporter>();
-            services.AddSingleton<ICrashReportProvider>(sp => sp.GetRequiredService<UnhandledExceptionReporter>());
+            services.AddSingleton<ICrashReportSource>(sp => sp.GetRequiredService<UnhandledExceptionReporter>());
         }
         if (config.IsAndroidUncaughtExceptionReporterEnabled)
         {
             services.AddSingleton<UncaughtExceptionReporter>();
-            services.AddSingleton<ICrashReportProvider>(sp => sp.GetRequiredService<UncaughtExceptionReporter>());
+            services.AddSingleton<ICrashReportSource>(sp => sp.GetRequiredService<UncaughtExceptionReporter>());
         }
 
         return services;

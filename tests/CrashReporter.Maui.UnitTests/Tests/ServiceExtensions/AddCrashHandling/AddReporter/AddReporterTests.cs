@@ -17,7 +17,7 @@ public class AddReporterTests
                 .AddReporter<MockCrashReporter>())
             .BuildServiceProvider();
 
-        var reporters = services.GetServices<ICrashReportProvider>();
+        var reporters = services.GetServices<ICrashReportSource>();
         var reporter = Assert.Single(reporters);
         Assert.IsType<MockCrashReporter>(reporter);
     }
@@ -33,11 +33,11 @@ public class AddReporterTests
             .BuildServiceProvider();
 
         using var scope1 = services.CreateScope();
-        var reporters1 = scope1.ServiceProvider.GetServices<ICrashReportProvider>();
+        var reporters1 = scope1.ServiceProvider.GetServices<ICrashReportSource>();
         var mockReporter1 = reporters1.Single();
 
         using var scope2 = services.CreateScope();
-        var reporters2 = scope2.ServiceProvider.GetServices<ICrashReportProvider>();
+        var reporters2 = scope2.ServiceProvider.GetServices<ICrashReportSource>();
         var mockReporter2 = reporters2.Single();
 
         Assert.Same(mockReporter1, mockReporter2);

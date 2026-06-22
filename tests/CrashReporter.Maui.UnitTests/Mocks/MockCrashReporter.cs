@@ -2,14 +2,14 @@
 
 namespace CrashReporter.Maui.UnitTests.Mocks;
 
-public class MockCrashReporter : ICrashReportProvider
+public class MockCrashReporter : ICrashReportSource
 {
     public ICrash? Crash { get; set; }
 
-    public int GetReportCount { get; private set; }
-    public Task<ICrash?> GetReport(CancellationToken cancellationToken)
+    public int ConsumeCount { get; private set; }
+    public Task<ICrash?> Consume(CancellationToken cancellationToken)
     {
-        GetReportCount++;
+        ConsumeCount++;
         return Task.FromResult(Crash);
     }
 }

@@ -2,9 +2,9 @@
 using CrashReporter.Maui.Crashes;
 using Microsoft.Extensions.Logging;
 
-namespace CrashReporter.Maui.UnitTests.Tests.CrashManagerService.GetReport;
+namespace CrashReporter.Maui.UnitTests.Tests.CrashManagerService.Consume;
 
-public class GetReportTests
+public class ConsumeTests
 {
     private readonly MockCrashReporter _mockReporter = new();
     private readonly MockCrashHandler _mockHandler = new();
@@ -22,13 +22,13 @@ public class GetReportTests
     public async Task ReturnsNullWhenNoReport()
     {
         var sut = GetSut(services => services
-            .AddSingleton<ICrashReportProvider>(_mockReporter)
+            .AddSingleton<ICrashReportSource>(_mockReporter)
             .AddSingleton<ICrashHandler>(_mockHandler));
 
-        var report = await sut.GetReport(CancellationToken.None);
+        var report = await sut.Consume(CancellationToken.None);
 
         Assert.Null(report);
-        Assert.Equal(1, _mockReporter.GetReportCount);
+        Assert.Equal(1, _mockReporter.ConsumeCount);
         Assert.Equal(0, _mockHandler.HandleCount);
     }
 
@@ -38,13 +38,13 @@ public class GetReportTests
         var crash = new MockCrash();
         _mockReporter.Crash = crash;
         var sut = GetSut(services => services
-            .AddSingleton<ICrashReportProvider>(_mockReporter)
+            .AddSingleton<ICrashReportSource>(_mockReporter)
             .AddSingleton<ICrashHandler>(_mockHandler));
 
-        var report = await sut.GetReport(CancellationToken.None);
+        var report = await sut.Consume(CancellationToken.None);
 
         Assert.Same(crash, report);
-        Assert.Equal(1, _mockReporter.GetReportCount);
+        Assert.Equal(1, _mockReporter.ConsumeCount);
         Assert.Equal(0, _mockHandler.HandleCount);
     }
 
@@ -54,10 +54,10 @@ public class GetReportTests
         var crashA = new MockCrash { Type = "A" };
         var crashB = new MockCrash { Type = "B" };
         var sut = GetSut(services => services
-            .AddSingleton<ICrashReportProvider>(new MockCrashReporter { Crash = crashA })
-            .AddSingleton<ICrashReportProvider>(new MockCrashReporter { Crash = crashB }));
+            .AddSingleton<ICrashReportSource>(new MockCrashReporter { Crash = crashA })
+            .AddSingleton<ICrashReportSource>(new MockCrashReporter { Crash = crashB }));
 
-        var report = await sut.GetReport(CancellationToken.None);
+        var report = await sut.Consume(CancellationToken.None);
 
         var aggregate = Assert.IsType<AggregateCrash>(report);
         Assert.Equal(2, aggregate.InnerCrashes.Count);
@@ -71,13 +71,13 @@ public class GetReportTests
         var crash = new MockCrash();
         var throwing = new MockThrowingCrashReporter();
         var sut = GetSut(services => services
-            .AddSingleton<ICrashReportProvider>(throwing)
-            .AddSingleton<ICrashReportProvider>(new MockCrashReporter { Crash = crash }));
+            .AddSingleton<ICrashReportSource>(throwing)
+            .AddSingleton<ICrashReportSource>(new MockCrashReporter { Crash = crash }));
 
-        var report = await sut.GetReport(CancellationToken.None);
+        var report = await sut.Consume(CancellationToken.None);
 
         Assert.Same(crash, report);
-        Assert.Equal(1, throwing.GetReportCount);
+        Assert.Equal(1, throwing.ConsumeCount);
     }
 
     [Fact]
@@ -85,10 +85,10 @@ public class GetReportTests
     {
         var crash = new MockCrash();
         var sut = GetSut(services => services
-            .AddSingleton<ICrashReportProvider>(new MockCrashReporter()) // null crash
-            .AddSingleton<ICrashReportProvider>(new MockCrashReporter { Crash = crash }));
+            .AddSingleton<ICrashReportSource>(new MockCrashReporter()) // null crash
+            .AddSingleton<ICrashReportSource>(new MockCrashReporter { Crash = crash }));
 
-        var report = await sut.GetReport(CancellationToken.None);
+        var report = await sut.Consume(CancellationToken.None);
 
         Assert.Same(crash, report);
     }
@@ -99,12 +99,12 @@ public class GetReportTests
         var crash = new MockCrash();
         var blocking = new MockBlockingCrashReporter { Crash = crash };
         var sut = GetSut(services => services
-            .AddSingleton<ICrashReportProvider>(blocking));
+            .AddSingleton<ICrashReportSource>(blocking));
 
-        var first = sut.GetReport(CancellationToken.None).AsTask();
+        var first = sut.Consume(CancellationToken.None).AsTask();
         await blocking.Entered; // first call now holds the semaphore
 
-        var second = await sut.GetReport(CancellationToken.None);
+        var second = await sut.Consume(CancellationToken.None);
         Assert.Null(second); // semaphore guard rejected the concurrent call
 
         blocking.Release();
