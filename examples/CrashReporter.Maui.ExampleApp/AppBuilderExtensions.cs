@@ -17,7 +17,7 @@ internal static class AppBuilderExtensions
             // config.DisableAndroidUncaughtExceptionReporter();
             // config.DisableAndroidUnhandeledExceptionReporter();
 
-            // You can also add your own custom reporters. Just implement the ICrashReportProvider interface and add it here.
+            // You can also add your own custom reporters. Just implement the ICrashReportSource interface and add it here.
             config.AddReporter<CustomCrashReporter>();
 
             // By default, the library includes two snapshot providers that collects basic information about the device and the app. You can disable these if you don't need them or if you want to implement your own versions of these snapshots. 

@@ -4,11 +4,11 @@ namespace CrashReporter.Maui.Crashes.Android;
 internal class UnhandledExceptionReporter(
     ISnapshotCollector _snapshots,
     ILogger<UnhandledExceptionReporter> _logger
-    ) : ICrashReportProvider
+    ) : ICrashReportSource
 {
     private static readonly string CrashFilePath = Path.Combine(FileSystem.AppDataDirectory, "Crashes", "android_env_crash.txt");
 
-    public Task<ICrash?> GetReport(CancellationToken cancellationToken)
+    public Task<ICrash?> Consume(CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
             return Task.FromCanceled<ICrash?>(cancellationToken);

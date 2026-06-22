@@ -3,12 +3,12 @@ namespace CrashReporter.Maui.Crashes.Android;
 internal class UncaughtExceptionReporter(
     ISnapshotCollector _snapshots,
     ILogger<UncaughtExceptionReporter> _logger
-    ) : Java.Lang.Object, Java.Lang.Thread.IUncaughtExceptionHandler, ICrashReportProvider
+    ) : Java.Lang.Object, Java.Lang.Thread.IUncaughtExceptionHandler, ICrashReportSource
 {
     private static readonly string CrashFilePath = Path.Combine(FileSystem.AppDataDirectory, "Crashes", "android_crash.txt");
     private Java.Lang.Thread.IUncaughtExceptionHandler? defaultHandler;
 
-    public Task<ICrash?> GetReport(CancellationToken cancellationToken)
+    public Task<ICrash?> Consume(CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
             return Task.FromCanceled<ICrash?>(cancellationToken);

@@ -13,7 +13,7 @@ public class AddCrashHandlingTests
 
         var services = sut.AddCrashHandling().BuildServiceProvider();
 
-        var reporters = services.GetServices<ICrashReportProvider>();
+        var reporters = services.GetServices<ICrashReportSource>();
         Assert.NotEmpty(reporters);
     }
 

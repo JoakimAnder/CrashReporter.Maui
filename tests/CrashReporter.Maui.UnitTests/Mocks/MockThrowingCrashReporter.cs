@@ -1,15 +1,15 @@
 
 namespace CrashReporter.Maui.UnitTests.Mocks;
 
-/// <summary>A reporter whose <see cref="GetReport"/> always throws, to exercise the
+/// <summary>A reporter whose <see cref="Consume"/> always throws, to exercise the
 /// CrashManager's per-reporter exception handling.</summary>
-public class MockThrowingCrashReporter : ICrashReportProvider
+public class MockThrowingCrashReporter : ICrashReportSource
 {
-    public int GetReportCount { get; private set; }
+    public int ConsumeCount { get; private set; }
 
-    public Task<ICrash?> GetReport(CancellationToken cancellationToken)
+    public Task<ICrash?> Consume(CancellationToken cancellationToken)
     {
-        GetReportCount++;
+        ConsumeCount++;
         throw new InvalidOperationException("Reporter failed");
     }
 }

@@ -25,12 +25,12 @@ public sealed class Configuration
 
     /// <summary>
     /// Adds a crash reporter to the crash handling system. A crash reporter is responsible for checking if a crash has occurred and to save it safely and swiftly before the app shuts down and disposes of any trace of the crash.
-    /// <see cref="ICrashReportProvider.GetReport(CancellationToken)"/> will be called by <see cref="ICrashManager.GetReport(CancellationToken)(CancellationToken)"/> to check for any stored crashes.
+    /// <see cref="ICrashReportSource.Consume(CancellationToken)"/> will be called by <see cref="ICrashManager.Consume(CancellationToken)"/> to check for any stored crashes.
     /// </summary>
     public Configuration AddReporter<TCrashReporter>()
-        where TCrashReporter : class, ICrashReportProvider
+        where TCrashReporter : class, ICrashReportSource
     {
-        Services.AddSingleton<ICrashReportProvider, TCrashReporter>();
+        Services.AddSingleton<ICrashReportSource, TCrashReporter>();
         return this;
     }
 
